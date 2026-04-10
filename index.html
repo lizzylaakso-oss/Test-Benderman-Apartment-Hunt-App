@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>✨ Apartment Hunter</title>
+  <style>
+    :root {
+      --bg: #0f0e17;
+      --surface: #1a1826;
+      --surface2: #221f35;
+      --accent: #a78bfa;
+      --accent2: #f472b6;
+      --accent3: #34d399;
+      --text: #e8e4f0;
+      --muted: #8b84a0;
+      --border: #2e2a42;
+      --danger: #f87171;
+      --gold: #fbbf24;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ---- SPARKLE CANVAS ---- */
+    #sparkle-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ---- HEADER ---- */
+    header {
+      background: linear-gradient(135deg, #1a0533 0%, #0f0e17 60%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-title h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-title .subtitle {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* ---- BUTTONS ---- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(167,139,250,0.4); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.82rem;
+    }
+
+    /* ---- SORT / FILTER BAR ---- */
+    .controls-bar {
+      padding: 16px 32px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .search-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      width: 220px;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent); }
+
+    .select-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .select-input:focus { outline: none; border-color: var(--accent); }
+
+    .stats-pills {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    .pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .pill span { color: var(--accent); font-weight: 700; }
+
+    /* ---- GRID ---- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+      padding: 28px 32px;
+    }
+
+    /* ---- CARD ---- */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+
+    .card-favorite-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: transform 0.15s;
+      z-index: 2;
+    }
+    .card-favorite-badge:hover { transform: scale(1.3); }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--surface2), var(--bg));
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-address {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+      padding-right: 36px;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+
+    .badge-rent { background: rgba(167,139,250,0.15); color: var(--accent); border: 1px solid rgba(167,139,250,0.3); }
+    .badge-beds { background: rgba(52,211,153,0.12); color: var(--accent3); border: 1px solid rgba(52,211,153,0.25); }
+    .badge-sqft { background: rgba(251,191,36,0.12); color: var(--gold); border: 1px solid rgba(251,191,36,0.25); }
+    .badge-toured { background: rgba(244,114,182,0.12); color: var(--accent2); border: 1px solid rgba(244,114,182,0.25); }
+
+    .card-rating {
+      display: flex;
+      gap: 3px;
+      margin-top: 10px;
+    }
+
+    .star { font-size: 1.1rem; cursor: default; }
+
+    .card-body { padding: 16px 20px; }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .pros-cons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .pros-list, .cons-list {
+      font-size: 0.83rem;
+      line-height: 1.6;
+    }
+
+    .pros-list .item::before { content: '✓ '; color: var(--accent3); }
+    .cons-list .item::before { content: '✗ '; color: var(--danger); }
+
+    .card-notes {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.5;
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      white-space: pre-wrap;
+    }
+
+    .card-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .link-btn {
+      font-size: 0.78rem;
+      padding: 5px 10px;
+      border-radius: 7px;
+      background: var(--surface2);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .link-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .card-contact {
+      font-size: 0.8rem;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .card-contact strong { color: var(--text); }
+
+    .card-footer {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    /* ---- EMPTY STATE ---- */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state .emoji { font-size: 4rem; margin-bottom: 16px; }
+    .empty-state h2 { font-size: 1.4rem; color: var(--text); margin-bottom: 8px; }
+
+    /* ---- MODAL ---- */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 620px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+    }
+
+    .modal-header {
+      padding: 24px 28px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .modal-close:hover { color: var(--text); background: var(--surface2); }
+
+    .modal-body { padding: 20px 28px 28px; }
+
+    /* ---- FORM ---- */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="url"],
+    input[type="date"],
+    textarea,
+    select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+    }
+
+    textarea { resize: vertical; min-height: 72px; }
+
+    .star-picker {
+      display: flex;
+      gap: 6px;
+    }
+
+    .star-picker .sp-star {
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: transform 0.1s;
+      line-height: 1;
+    }
+    .star-picker .sp-star:hover { transform: scale(1.2); }
+
+    .form-divider {
+      grid-column: 1 / -1;
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 4px 0;
+    }
+
+    .form-section-title {
+      grid-column: 1 / -1;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    /* ---- TOAST ---- */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 0.88rem;
+      color: var(--text);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ---- SCROLLBAR ---- */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 600px) {
+      header { padding: 16px 20px; }
+      .controls-bar { padding: 12px 20px; }
+      .grid { padding: 20px; grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .pros-cons { grid-template-columns: 1fr; }
+      .modal-body { padding: 16px 20px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="sparkle-canvas"></canvas>
+
+<header>
+  <div class="header-title">
+    <div>
+      <h1>✨ Apartment Hunter</h1>
+      <div class="subtitle">Track every tour, find your perfect place</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇ Export</button>
+    <button class="btn btn-primary" onclick="openModal()">＋ Add Property</button>
+  </div>
+</header>
+
+<div class="controls-bar">
+  <input class="search-input" type="text" placeholder="🔍 Search properties..." oninput="render()" id="search-input" />
+  <select class="select-input" onchange="render()" id="sort-select">
+    <option value="date-desc">Newest First</option>
+    <option value="date-asc">Oldest First</option>
+    <option value="rating-desc">Highest Rated</option>
+    <option value="rent-asc">Cheapest First</option>
+    <option value="rent-desc">Most Expensive</option>
+    <option value="fav">Favorites First</option>
+  </select>
+  <select class="select-input" onchange="render()" id="filter-select">
+    <option value="all">All Properties</option>
+    <option value="fav">Favorites Only</option>
+  </select>
+  <div class="stats-pills" id="stats-pills"></div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modal-backdrop" style="display:none" onclick="backdropClose(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Add Property</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="prop-form" onsubmit="saveProperty(event)">
+        <div class="form-grid">
+
+          <div class="form-section-title">📍 Location</div>
+
+          <div class="form-group full">
+            <label>Address / Name</label>
+            <input type="text" id="f-address" placeholder="e.g. 123 Main St, Apt 4B" required />
+          </div>
+          <div class="form-group">
+            <label>Neighborhood</label>
+            <input type="text" id="f-neighborhood" placeholder="e.g. Williamsburg" />
+          </div>
+          <div class="form-group">
+            <label>Tour Date</label>
+            <input type="date" id="f-date" />
+          </div>
+
+          <hr class="form-divider" />
+          <div class="form-section-title">🏠 Specs</div>
+
+          <div class="form-group">
+            <label>Monthly Rent ($)</label>
+            <input type="number" id="f-rent" placeholder="2500" min="0" />
+          </div>
+          <div class="form-group">
+            <label>Bedrooms</label>
+            <input type="number" id="f-beds" placeholder="1" min="0" step="0.5" />
+          </div>
+          <div class="form-group">
+            <label>Bathrooms</label>
+            <input type="number" id="f-baths" placeholder="1" min="0" step="0.5" />
+          </div>
+          <div class="form-group">
+            <label>Square Feet</label>
+            <input type="number" id="f-sqft" placeholder="750" min="0" />
+          </div>
+          <div class="form-group">
+            <label>Floor</label>
+            <input type="text" id="f-floor" placeholder="3rd" />
+          </div>
+          <div class="form-group">
+            <label>Available Date</label>
+            <input type="date" id="f-avail" />
+          </div>
+
+          <hr class="form-divider" />
+          <div class="form-section-title">⭐ Your Take</div>
+
+          <div class="form-group full">
+            <label>Overall Rating</label>
+            <div class="star-picker" id="star-picker">
+              <span class="sp-star" data-v="1">☆</span>
+              <span class="sp-star" data-v="2">☆</span>
+              <span class="sp-star" data-v="3">☆</span>
+              <span class="sp-star" data-v="4">☆</span>
+              <span class="sp-star" data-v="5">☆</span>
+            </div>
+            <input type="hidden" id="f-rating" value="0" />
+          </div>
+          <div class="form-group full">
+            <label>What I Loved ✓ (one per line)</label>
+            <textarea id="f-pros" placeholder="Natural light&#10;Close to subway&#10;In-unit laundry"></textarea>
+          </div>
+          <div class="form-group full">
+            <label>What I Didn't Love ✗ (one per line)</label>
+            <textarea id="f-cons" placeholder="Small closets&#10;Street noise&#10;No dishwasher"></textarea>
+          </div>
+          <div class="form-group full">
+            <label>Notes</label>
+            <textarea id="f-notes" placeholder="Any extra thoughts..."></textarea>
+          </div>
+
+          <hr class="form-divider" />
+          <div class="form-section-title">🔗 Links & Contact</div>
+
+          <div class="form-group full">
+            <label>Zillow / Listing URL</label>
+            <input type="url" id="f-zillow" placeholder="https://zillow.com/..." />
+          </div>
+          <div class="form-group full">
+            <label>Other Link (StreetEasy, Apartments.com…)</label>
+            <input type="url" id="f-link2" placeholder="https://..." />
+          </div>
+          <div class="form-group">
+            <label>Contact Name</label>
+            <input type="text" id="f-contact-name" placeholder="Jane Smith" />
+          </div>
+          <div class="form-group">
+            <label>Contact Phone</label>
+            <input type="text" id="f-contact-phone" placeholder="(555) 123-4567" />
+          </div>
+          <div class="form-group full">
+            <label>Contact Email</label>
+            <input type="text" id="f-contact-email" placeholder="jane@realty.com" />
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-btn">✨ Save Property</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ---- DATA ----
+const STORAGE_KEY = 'apt_hunter_v1';
+let props = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let editingId = null;
+let currentRating = 0;
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(props));
+}
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+// ---- RENDER ----
+function render() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const sort = document.getElementById('sort-select').value;
+  const filter = document.getElementById('filter-select').value;
+
+  let list = [...props];
+
+  if (filter === 'fav') list = list.filter(p => p.favorite);
+
+  if (q) {
+    list = list.filter(p =>
+      (p.address + p.neighborhood + p.notes + p.pros + p.cons).toLowerCase().includes(q)
+    );
+  }
+
+  list.sort((a, b) => {
+    if (sort === 'date-desc') return b.createdAt - a.createdAt;
+    if (sort === 'date-asc') return a.createdAt - b.createdAt;
+    if (sort === 'rating-desc') return (b.rating || 0) - (a.rating || 0);
+    if (sort === 'rent-asc') return (a.rent || Infinity) - (b.rent || Infinity);
+    if (sort === 'rent-desc') return (b.rent || 0) - (a.rent || 0);
+    if (sort === 'fav') return (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0);
+    return 0;
+  });
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  if (list.length === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="emoji">${props.length === 0 ? '🏠' : '🔍'}</div>
+      <h2>${props.length === 0 ? 'No properties yet!' : 'No results found'}</h2>
+      <p>${props.length === 0 ? 'Add your first toured apartment to get started.' : 'Try a different search.'}</p>
+      ${props.length === 0 ? '<br><button class="btn btn-primary" onclick="openModal()" style="margin:auto">＋ Add First Property</button>' : ''}
+    </div>`;
+  } else {
+    list.forEach(p => grid.appendChild(buildCard(p)));
+  }
+
+  // Stats
+  const avgRent = props.filter(p => p.rent).reduce((s,p) => s + p.rent, 0) / (props.filter(p => p.rent).length || 1);
+  const avgRating = props.filter(p => p.rating).reduce((s,p) => s + p.rating, 0) / (props.filter(p => p.rating).length || 1);
+  document.getElementById('stats-pills').innerHTML = `
+    <div class="pill"><span>${props.length}</span> toured</div>
+    ${props.filter(p => p.rent).length ? `<div class="pill">avg <span>$${Math.round(avgRent).toLocaleString()}</span>/mo</div>` : ''}
+    ${props.filter(p => p.rating).length ? `<div class="pill">avg <span>${avgRating.toFixed(1)}★</span></div>` : ''}
+    <div class="pill"><span>${props.filter(p => p.favorite).length}</span> ❤️</div>
+  `;
+}
+
+function buildCard(p) {
+  const div = document.createElement('div');
+  div.className = 'card';
+
+  const pros = (p.pros || '').split('\n').filter(Boolean);
+  const cons = (p.cons || '').split('\n').filter(Boolean);
+  const stars = '★'.repeat(p.rating || 0) + '☆'.repeat(5 - (p.rating || 0));
+
+  div.innerHTML = `
+    <div class="card-favorite-badge" onclick="toggleFav('${p.id}')" title="Toggle favorite">
+      ${p.favorite ? '❤️' : '🤍'}
+    </div>
+    <div class="card-header">
+      <div class="card-address">${esc(p.address)}</div>
+      ${p.neighborhood ? `<div style="font-size:0.8rem;color:var(--muted);margin-top:2px">📍 ${esc(p.neighborhood)}</div>` : ''}
+      <div class="card-meta">
+        ${p.rent ? `<span class="badge badge-rent">$${Number(p.rent).toLocaleString()}/mo</span>` : ''}
+        ${p.beds != null && p.beds !== '' ? `<span class="badge badge-beds">${p.beds} bd / ${p.baths || '?'} ba</span>` : ''}
+        ${p.sqft ? `<span class="badge badge-sqft">${Number(p.sqft).toLocaleString()} sqft</span>` : ''}
+        ${p.tourDate ? `<span class="badge badge-toured">Toured ${fmtDate(p.tourDate)}</span>` : ''}
+        ${p.availDate ? `<span class="badge" style="background:rgba(52,211,153,0.1);color:var(--accent3);border:1px solid rgba(52,211,153,0.2)">Avail ${fmtDate(p.availDate)}</span>` : ''}
+        ${p.floor ? `<span class="badge" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)">Floor ${esc(p.floor)}</span>` : ''}
+      </div>
+      ${p.rating ? `<div class="card-rating" style="font-size:1rem;color:var(--gold);margin-top:10px">${stars}</div>` : ''}
+    </div>
+    <div class="card-body">
+      ${(pros.length || cons.length) ? `
+        <div class="pros-cons">
+          <div>
+            <div class="section-label">Loved</div>
+            <div class="pros-list">${pros.length ? pros.map(x => `<div class="item">${esc(x)}</div>`).join('') : '<span style="color:var(--muted);font-size:0.8rem">—</span>'}</div>
+          </div>
+          <div>
+            <div class="section-label">Didn't Love</div>
+            <div class="cons-list">${cons.length ? cons.map(x => `<div class="item">${esc(x)}</div>`).join('') : '<span style="color:var(--muted);font-size:0.8rem">—</span>'}</div>
+          </div>
+        </div>` : ''}
+      ${p.notes ? `<div class="section-label">Notes</div><div class="card-notes">${esc(p.notes)}</div>` : ''}
+      ${(p.zillow || p.link2) ? `
+        <div class="card-links">
+          ${p.zillow ? `<a class="link-btn" href="${esc(p.zillow)}" target="_blank" rel="noopener">🏠 Listing</a>` : ''}
+          ${p.link2 ? `<a class="link-btn" href="${esc(p.link2)}" target="_blank" rel="noopener">🔗 Link 2</a>` : ''}
+        </div>` : ''}
+      ${(p.contactName || p.contactPhone || p.contactEmail) ? `
+        <div class="card-contact">
+          📞 <strong>${esc(p.contactName || 'Contact')}</strong>
+          ${p.contactPhone ? ` · ${esc(p.contactPhone)}` : ''}
+          ${p.contactEmail ? ` · <a href="mailto:${esc(p.contactEmail)}" style="color:var(--accent)">${esc(p.contactEmail)}</a>` : ''}
+        </div>` : ''}
+    </div>
+    <div class="card-footer">
+      <button class="btn btn-ghost btn-sm" onclick="editProperty('${p.id}')">✏️ Edit</button>
+      <button class="btn btn-danger" onclick="deleteProperty('${p.id}')">🗑 Delete</button>
+    </div>
+  `;
+  return div;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  return new Date(y, m-1, day).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+
+// ---- MODAL ----
+function openModal(id) {
+  editingId = id || null;
+  currentRating = 0;
+
+  if (id) {
+    const p = props.find(x => x.id === id);
+    document.getElementById('modal-title').textContent = 'Edit Property';
+    document.getElementById('f-address').value = p.address || '';
+    document.getElementById('f-neighborhood').value = p.neighborhood || '';
+    document.getElementById('f-date').value = p.tourDate || '';
+    document.getElementById('f-rent').value = p.rent || '';
+    document.getElementById('f-beds').value = p.beds != null ? p.beds : '';
+    document.getElementById('f-baths').value = p.baths != null ? p.baths : '';
+    document.getElementById('f-sqft').value = p.sqft || '';
+    document.getElementById('f-floor').value = p.floor || '';
+    document.getElementById('f-avail').value = p.availDate || '';
+    document.getElementById('f-pros').value = p.pros || '';
+    document.getElementById('f-cons').value = p.cons || '';
+    document.getElementById('f-notes').value = p.notes || '';
+    document.getElementById('f-zillow').value = p.zillow || '';
+    document.getElementById('f-link2').value = p.link2 || '';
+    document.getElementById('f-contact-name').value = p.contactName || '';
+    document.getElementById('f-contact-phone').value = p.contactPhone || '';
+    document.getElementById('f-contact-email').value = p.contactEmail || '';
+    setRating(p.rating || 0);
+  } else {
+    document.getElementById('modal-title').textContent = 'Add Property';
+    document.getElementById('prop-form').reset();
+    setRating(0);
+  }
+
+  document.getElementById('modal-backdrop').style.display = 'flex';
+  document.getElementById('f-address').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').style.display = 'none';
+  editingId = null;
+}
+
+function backdropClose(e) {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal();
+}
+
+// ---- STAR PICKER ----
+const starPicker = document.getElementById('star-picker');
+starPicker.querySelectorAll('.sp-star').forEach(s => {
+  s.addEventListener('click', () => setRating(parseInt(s.dataset.v)));
+  s.addEventListener('mouseenter', () => highlightStars(parseInt(s.dataset.v)));
+  s.addEventListener('mouseleave', () => highlightStars(currentRating));
+});
+
+function setRating(v) {
+  currentRating = v;
+  document.getElementById('f-rating').value = v;
+  highlightStars(v);
+}
+
+function highlightStars(v) {
+  starPicker.querySelectorAll('.sp-star').forEach(s => {
+    s.textContent = parseInt(s.dataset.v) <= v ? '★' : '☆';
+    s.style.color = parseInt(s.dataset.v) <= v ? 'var(--gold)' : 'var(--muted)';
+  });
+}
+
+// ---- CRUD ----
+function saveProperty(e) {
+  e.preventDefault();
+  const p = {
+    id: editingId || genId(),
+    createdAt: editingId ? props.find(x => x.id === editingId)?.createdAt : Date.now(),
+    address: document.getElementById('f-address').value.trim(),
+    neighborhood: document.getElementById('f-neighborhood').value.trim(),
+    tourDate: document.getElementById('f-date').value,
+    rent: parseFloat(document.getElementById('f-rent').value) || null,
+    beds: document.getElementById('f-beds').value !== '' ? parseFloat(document.getElementById('f-beds').value) : null,
+    baths: document.getElementById('f-baths').value !== '' ? parseFloat(document.getElementById('f-baths').value) : null,
+    sqft: parseInt(document.getElementById('f-sqft').value) || null,
+    floor: document.getElementById('f-floor').value.trim(),
+    availDate: document.getElementById('f-avail').value,
+    rating: currentRating,
+    pros: document.getElementById('f-pros').value.trim(),
+    cons: document.getElementById('f-cons').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+    zillow: document.getElementById('f-zillow').value.trim(),
+    link2: document.getElementById('f-link2').value.trim(),
+    contactName: document.getElementById('f-contact-name').value.trim(),
+    contactPhone: document.getElementById('f-contact-phone').value.trim(),
+    contactEmail: document.getElementById('f-contact-email').value.trim(),
+    favorite: editingId ? props.find(x => x.id === editingId)?.favorite || false : false,
+  };
+
+  if (editingId) {
+    const idx = props.findIndex(x => x.id === editingId);
+    props[idx] = p;
+    toast('Property updated!');
+  } else {
+    props.unshift(p);
+    toast('Property added! ✨');
+    burst(window.innerWidth / 2, window.innerHeight / 2);
+  }
+
+  save();
+  render();
+  closeModal();
+}
+
+function editProperty(id) { openModal(id); }
+
+function deleteProperty(id) {
+  if (!confirm('Delete this property?')) return;
+  props = props.filter(x => x.id !== id);
+  save();
+  render();
+  toast('Property removed.');
+}
+
+function toggleFav(id) {
+  const p = props.find(x => x.id === id);
+  if (!p) return;
+  p.favorite = !p.favorite;
+  save();
+  render();
+  if (p.favorite) burst(event.clientX, event.clientY);
+}
+
+// ---- EXPORT ----
+function exportData() {
+  const blob = new Blob([JSON.stringify(props, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'apartment-hunt.json';
+  a.click();
+  toast('Exported!');
+}
+
+// ---- TOAST ----
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+
+// ---- SPARKLES ----
+const canvas = document.getElementById('sparkle-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Cursor sparkle trail
+document.addEventListener('mousemove', e => {
+  if (Math.random() > 0.6) spawnParticle(e.clientX, e.clientY, 'trail');
+});
+
+function spawnParticle(x, y, type) {
+  const colors = ['#a78bfa','#f472b6','#34d399','#fbbf24','#60a5fa','#f9a8d4'];
+  const count = type === 'burst' ? 28 : 1;
+  for (let i = 0; i < count; i++) {
+    const angle = type === 'burst' ? (Math.PI * 2 * i / count) : Math.random() * Math.PI * 2;
+    const speed = type === 'burst' ? (3 + Math.random() * 6) : (0.5 + Math.random() * 1.5);
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed + (Math.random() - 0.5) * 2,
+      vy: Math.sin(angle) * speed - (type === 'burst' ? 0 : Math.random() * 2),
+      life: 1,
+      decay: type === 'burst' ? 0.015 + Math.random() * 0.01 : 0.04 + Math.random() * 0.04,
+      size: type === 'burst' ? 3 + Math.random() * 5 : 2 + Math.random() * 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      shape: Math.random() > 0.5 ? 'star' : 'circle',
+      rotation: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.2,
+    });
+  }
+}
+
+function burst(x, y) { spawnParticle(x, y, 'burst'); }
+
+function drawStar(ctx, x, y, r, rotation) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  ctx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a = (i * 4 * Math.PI / 5) - Math.PI / 2;
+    const b = ((i * 4 + 2) * Math.PI / 5) - Math.PI / 2;
+    if (i === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+    else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    ctx.lineTo(Math.cos(b) * (r * 0.4), Math.sin(b) * (r * 0.4));
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function loop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles = particles.filter(p => p.life > 0);
+  for (const p of particles) {
+    ctx.globalAlpha = p.life * 0.9;
+    ctx.fillStyle = p.color;
+    if (p.shape === 'star') {
+      drawStar(ctx, p.x, p.y, p.size, p.rotation);
+    } else {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.08;
+    p.life -= p.decay;
+    p.rotation += p.rotSpeed;
+    p.vx *= 0.99;
+  }
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(loop);
+}
+loop();
+
+// Initial sparkle burst on load
+setTimeout(() => {
+  burst(window.innerWidth * 0.3, window.innerHeight * 0.3);
+  burst(window.innerWidth * 0.7, window.innerHeight * 0.25);
+}, 300);
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'n' && !['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) openModal();
+});
+
+render();
+</script>
+</body>
+</html>
