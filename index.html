@@ -660,13 +660,38 @@
 
 <script>
 // ---- DATA ----
-const STORAGE_KEY = 'apt_hunter_v1';
-let props = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+const API = 'https://script.google.com/macros/s/AKfycbyptY2RxXI8oC7P5pZA_MdTqYDIO7cArPqkq72ntjyWw6CyK07c-32UETY9Bk6PRHJ-6g/exec';
+let props = [];
 let editingId = null;
 let currentRating = 0;
 
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(props));
+async function loadFromSheet() {
+  setLoading(true);
+  try {
+    const res = await fetch(`${API}?action=getAll`);
+    props = await res.json();
+    render();
+  } catch (e) {
+    toast('⚠️ Could not load from sheet — showing local data');
+    props = JSON.parse(localStorage.getItem('apt_hunter_v1') || '[]');
+    render();
+  } finally {
+    setLoading(false);
+  }
+}
+
+function setLoading(on) {
+  document.getElementById('grid').innerHTML = on
+    ? `<div class="empty-state"><div class="emoji">⏳</div><h2>Loading properties...</h2></div>`
+    : '';
+}
+
+async function pushToSheet(action, payload) {
+  const res = await fetch(API, {
+    method: 'POST',
+    body: JSON.stringify({ action, ...payload }),
+  });
+  return res.json();
 }
 
 function genId() {
@@ -860,8 +885,12 @@ function highlightStars(v) {
 }
 
 // ---- CRUD ----
-function saveProperty(e) {
+async function saveProperty(e) {
   e.preventDefault();
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving...';
+
   const p = {
     id: editingId || genId(),
     createdAt: editingId ? props.find(x => x.id === editingId)?.createdAt : Date.now(),
@@ -886,38 +915,53 @@ function saveProperty(e) {
     favorite: editingId ? props.find(x => x.id === editingId)?.favorite || false : false,
   };
 
-  if (editingId) {
-    const idx = props.findIndex(x => x.id === editingId);
-    props[idx] = p;
-    toast('Property updated!');
-  } else {
-    props.unshift(p);
-    toast('Property added! ✨');
-    burst(window.innerWidth / 2, window.innerHeight / 2);
+  try {
+    await pushToSheet('save', { property: p });
+    if (editingId) {
+      const idx = props.findIndex(x => x.id === editingId);
+      props[idx] = p;
+      toast('Property updated!');
+    } else {
+      props.unshift(p);
+      toast('Property added! ✨');
+      burst(window.innerWidth / 2, window.innerHeight / 2);
+    }
+    render();
+    closeModal();
+  } catch (err) {
+    toast('⚠️ Save failed — check your connection');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '✨ Save Property';
   }
-
-  save();
-  render();
-  closeModal();
 }
 
 function editProperty(id) { openModal(id); }
 
-function deleteProperty(id) {
+async function deleteProperty(id) {
   if (!confirm('Delete this property?')) return;
-  props = props.filter(x => x.id !== id);
-  save();
-  render();
-  toast('Property removed.');
+  try {
+    await pushToSheet('delete', { id });
+    props = props.filter(x => x.id !== id);
+    render();
+    toast('Property removed.');
+  } catch (err) {
+    toast('⚠️ Delete failed — check your connection');
+  }
 }
 
-function toggleFav(id) {
+async function toggleFav(id) {
   const p = props.find(x => x.id === id);
   if (!p) return;
   p.favorite = !p.favorite;
-  save();
-  render();
-  if (p.favorite) burst(event.clientX, event.clientY);
+  try {
+    await pushToSheet('save', { property: p });
+    render();
+    if (p.favorite) burst(event.clientX, event.clientY);
+  } catch (err) {
+    p.favorite = !p.favorite; // revert
+    toast('⚠️ Could not save favorite');
+  }
 }
 
 // ---- EXPORT ----
@@ -1033,7 +1077,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'n' && !['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) openModal();
 });
 
-render();
+loadFromSheet();
 </script>
 </body>
 </html>
